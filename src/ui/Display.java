@@ -1,155 +1,221 @@
 package ui;
 
-import java.util.List;
-import business.CartItem;
+import business.Order;
+import business.OrderItem;
 import business.Products;
 import pandesal.Pandesal;
-import user.Buyer;
 
-public class Display {
+public class Display implements ClearScreen {
+
+    // VARIABLES
     private final Products products;
-    private final Buyer buyer;
+    private final Order order;
     private final UserController userController;
-    private final DisplayHelper displayHelper;
+    private int choice = 0;
 
-    public Display(Products products, Buyer buyer, UserController userController, DisplayHelper displayHelper) {
+    // CONSTRUCTOR
+    public Display(Products products, Order order, UserController userController) {
         this.products = products;
-        this.buyer = buyer;
+        this.order = order;
         this.userController = userController;
-        this.displayHelper = displayHelper;
     }
 
+    // OVERRIDE METHODS
+    @Override
+    public void clearScreen() {
+        System.out.println("\033[H\033[2J");
+        System.out.println("\n\n\n\n");
+        showTitle();
+        showStatus();
+    }
+
+    // METHODS
     public void start() {
         while (true) {
-            clearAndShowTitle();
+            clearScreen();
             showControls();
 
-            int choice = userController.readInt();
+            choice = userController.readInt();
 
             if (choice == 5) {
-                System.out.println("\nThank you for visiting Ricky's Pandesal!");
                 return;
-            } else if (choice == 1 || choice == 2) {
-                showMenu();
-                int productChoice = userController.readInt();
-                if (productChoice == products.size() + 1) {
-                    continue;
-                } else if (productChoice > 0 && productChoice <= products.size()) {
-                    showSelectedProductDetails(productChoice);
-                } else {
-                    showInvalidChoice();
-                }
-            } else if (choice == 3) {
-                showCart();
+            } else if (choice == 1)
+                optionAddItem();
+            else if (choice == 2)
+                optionRemoveItem();
+            else if (choice == 3) {
+                optionCheckout();
             } else if (choice == 4) {
-                checkout();
+                optionClearOrder();
             } else {
                 showInvalidChoice();
             }
         }
     }
 
-    private void clearAndShowTitle() {
-        displayHelper.clearScreen();
-        showTitle();
+    public void showTitle() {
+        System.out.println("====================");
+        System.out.println("PANDISAL PEE-OW-ES");
+        System.out.println("====================");
     }
 
-    public void showTitle() {
-        System.out.println("==================");
-        System.out.println("Ricky's Pandesal");
-        System.out.println("==================");
+    public void showStatus() {
+        System.out.println("\n:: Current Order: ");
+        if (order.isEmpty()) {
+            System.out.println("   (No items yet)\n");
+            return;
+        }
+
+        for (int i = 0; i < order.size(); i++) {
+            OrderItem item = order.getItems().get(i);
+            Pandesal product = item.getProduct();
+            System.out.printf("   [%d] %s Pandesal x %d = ₱%.2f%n",
+                    i + 1,
+                    product.getFlavor(),
+                    item.getQuantity(),
+                    item.getSubtotal());
+        }
+
+        System.out.printf("%n:: Total: ₱%.2f%n%n", order.getTotal());
     }
 
     public void showControls() {
-        System.out.println("[1] View Menu");
-        System.out.println("[2] Add to Cart");
-        System.out.println("[3] View Cart");
-        System.out.println("[4] Checkout");
-        System.out.println("[5] Exit");
+        System.out.println(":: Controls:");
+        System.out.println("   [1] Add Item");
+        System.out.println("   [2] Remove Item");
+        System.out.println("   [3] Checkout / Payment");
+        System.out.println("   [4] Clear Order");
+        System.out.println("   [5] Exit\n");
     }
 
-    public void showMenu() {
-        List<Pandesal> productList = products.getProductList();
-        System.out.println("Menu:");
-        for (int i = 0; i < productList.size(); i++) {
-            Pandesal pandesal = productList.get(i);
-            System.out.printf("[%d] %s - ₱%.2f%n", i + 1, pandesal.getFlavor(), pandesal.getPricePerPiece());
+    public void optionAddItem() {
+        showTitle();
+        System.out.println("\n:: 1 - Add Item");
+        for (int i = 0; i < products.size(); i++) {
+            Pandesal pandesal = products.get(i);
+            System.out.printf("   [%d] %s Pandesal  \t₱ %.2f%n", i + 1, pandesal.getFlavor(),
+                    pandesal.getPricePerPiece());
         }
-        System.out.printf("[%d] Back%n", productList.size() + 1);
+        System.out.printf("   [%d] Back%n", products.size() + 1);
         System.out.println();
-    }
 
-    public void showSelectedProductDetails(int choice) {
-        int selectedProduct = choice - 1;
-        Pandesal product = products.getProduct(selectedProduct);
-        int quantity = 0;
-        System.out.println("You have selected:\n> " + product.getFlavor());
-        System.out.println("\nPrice per piece:\n> ₱" + product.getPricePerPiece());
-        System.out.println("\nEnter quantity:");
-        quantity = userController.readInt();
-        if (quantity < 1) {
-            showInvalidChoice();
-            return;
-        }
-        double totalCost = product.calculateTotalCost(quantity);
-        System.out.printf("Total cost for %d pieces of %s:\n> ₱%.2f%n", quantity,
-                product.getFlavor(), totalCost);
-        System.out.println("\nDecision:");
-        System.out.println("[1] Add to Cart");
-        System.out.println("[2] Back to Menu");
         choice = userController.readInt();
-        if (choice == 1) {
-            buyer.addToCart(product, quantity);
-            System.out.printf("\n%d pieces of %s pandesal added to cart.%n", quantity,
-                    product.getFlavor());
-            userController.pressEnterToContinue();
-        } else if (choice == 2) {
+        if (choice == products.size() + 1) {
             return;
+        } else if (choice > 0 && choice <= products.size()) {
+            optionSelectItem(choice);
         } else {
             showInvalidChoice();
         }
     }
 
-    public void showCart() {
-        if (buyer.getCart().isEmpty()) {
-            System.out.println("Your cart is empty.");
-            userController.pressEnterToContinue();
+    public void optionSelectItem(int choice) {
+        int quantity = 0;
+        int selectedItem = choice - 1;
+        Pandesal pandesal = products.get(selectedItem);
+        
+        showTitle();
+        System.out.println("\n:: You have selected:\n   " + pandesal.getFlavor() + " Pandesal");
+        System.out.println("\n:: Price per piece:\n   ₱" + pandesal.getPricePerPiece());
+        System.out.println("\n:: Enter quantity: (0 - Cancel)");
+        quantity = userController.readInt();
+        if (quantity == 0) return;
+        else if (quantity > 0) {
+            showTitle();
+            double totalCost = pandesal.calculateTotalCost(quantity);
+            System.out.printf("\n:: Total cost for %d pieces of %s Pandesal:\n   ₱%.2f%n", quantity,
+                    pandesal.getFlavor(), totalCost);
+
+            System.out.println("\n:: Decision:");
+            System.out.println("   [1] Add to Order");
+            System.out.println("   [2] Back to Menu\n");
+            choice = userController.readInt();
+            if (choice == 1) {
+                order.addItem(pandesal, quantity);
+                showTitle();
+                System.out.printf("\n%d pieces of %s pandesal %n", quantity,
+                        pandesal.getFlavor());
+                System.out.printf("added to order worth ₱%.2f%n", totalCost);
+                userController.pressEnter();
+            } else if (choice == 2) return;
+            else showInvalidChoice();
+        }
+        else showInvalidChoice();
+    }
+
+    public void optionRemoveItem() {
+        if (order.isEmpty()) {
+            showTitle();
+            System.out.println("\n:: No items to remove.");
+            userController.pressEnter();
             return;
         }
 
-        printCart();
-        System.out.printf("Total: ₱%.2f%n", buyer.getCart().getTotalCost());
-        userController.pressEnterToContinue();
+        showTitle();
+        showStatus();
+        System.out.println(":: Enter item number to remove: (0 - Cancel)");
+        choice = userController.readInt();
+
+        if (choice == 0) {
+            return;
+        } else if (order.removeItem(choice - 1)) {
+            showTitle();
+            System.out.println("\n:: Item removed from order.");
+            userController.pressEnter();
+        } else {
+            showInvalidChoice();
+        }
     }
 
-    public void checkout() {
-        if (buyer.getCart().isEmpty()) {
-            System.out.println("Your cart is empty.");
-            userController.pressEnterToContinue();
+    public void optionCheckout() {
+        if (order.isEmpty()) {
+            showTitle();
+            System.out.println("\n:: No items to checkout.");
+            userController.pressEnter();
             return;
         }
 
-        printCart();
-        System.out.printf("Total: ₱%.2f%n", buyer.getCart().getTotalCost());
-        buyer.getCart().clear();
-        System.out.printf("Thank you, %s! Your order has been checked out.%n", buyer.getName());
-        userController.pressEnterToContinue();
+        showTitle();
+        showStatus();
+        System.out.println(":: Enter customer payment: (0 - Cancel)");
+        double payment = userController.readDouble();
+        double total = order.getTotal();
+
+        if (payment == 0) {
+            return;
+        } else if (payment < total) {
+            showTitle();
+            System.out.println("\n:: Payment is not enough.");
+            userController.pressEnter();
+        } else {
+            showTitle();
+            showStatus();
+            System.out.printf(":: Payment: ₱%.2f%n", payment);
+            System.out.printf(":: Change: ₱%.2f%n", payment - total);
+            order.clear();
+            userController.pressEnter();
+        }
     }
 
-    private void printCart() {
-        System.out.println("Cart:");
-        for (CartItem item : buyer.getCart().getItems()) {
-            Pandesal product = item.getProduct();
-            System.out.printf("%d x %s - ₱%.2f%n",
-                    item.getQuantity(),
-                    product.getFlavor(),
-                    item.getTotalCost());
+    public void optionClearOrder() {
+        if (order.isEmpty()) {
+            showTitle();
+            System.out.println("\n:: Order is already empty.");
+            userController.pressEnter();
+            return;
         }
+
+        order.clear();
+        showTitle();
+        System.out.println("\n:: Current order cleared.");
+        userController.pressEnter();
     }
 
     public void showInvalidChoice() {
-        System.out.println("\nInvalid choice. Please try again.");
-        userController.pressEnterToContinue();
+        showTitle();
+        System.out.print("\nInvalid choice. Please try again.\n");
+        userController.pressEnter();
+        clearScreen();
     }
 
 }

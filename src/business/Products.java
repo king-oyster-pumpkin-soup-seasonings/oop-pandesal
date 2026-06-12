@@ -1,15 +1,20 @@
 package business;
 
 import java.util.ArrayList;
+import java.util.List;
+
 import pandesal.Pandesal;
 import pandesal.RegularPandesal;
 import pandesal.SpecialPandesal;
 
 public class Products {
 
-    public static ArrayList<Pandesal> productList = new ArrayList<>();
+    private final List<Pandesal> productList;
 
-    public static void produce() {
+    // CONSTRUCTOR
+    public Products() {
+        this.productList = new ArrayList<>();
+
         // BASE PANDESAL PRICING
         BasePricing basePricing = new BasePricing(2.0);
 
@@ -27,6 +32,18 @@ public class Products {
         productList.add(malunggayPandesal);
         productList.add(cheesePandesal);
         productList.add(binangkalPandesal);
+    }
+
+    // METHODS
+    public int size() {
+        return productList.size();
+    }
+
+    public Pandesal get(int index) {
+        if (index >= 0 && index < productList.size()) {
+            return productList.get(index);
+        }
+        return null;
     }
 
 }

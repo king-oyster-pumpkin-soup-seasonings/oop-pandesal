@@ -1,6 +1,8 @@
 package pandesal;
 
-public class SpecialPandesal extends Pandesal {
+import business.Orderable;
+
+public class SpecialPandesal extends Pandesal implements Orderable {
 
     // VARIABLES (Encapsulated)
     private final double flavorCost;
@@ -14,6 +16,11 @@ public class SpecialPandesal extends Pandesal {
     // METHOD (Overridden & Polymorphic)
     @Override
     public double calculateTotalCost(int quantity) {
+        return quantity * getPricePerPiece();
+    }
+
+    @Override
+    public double calculateTotalCost(int quantity, double discount) {
         return quantity * getPricePerPiece();
     }
 

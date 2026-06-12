@@ -2,29 +2,49 @@ package ui;
 
 import java.util.Scanner;
 
-public class UserController {
-    private final Scanner scanner;
-    private final DisplayHelper displayHelper;
+public class UserController implements ClearScreen {
 
-    public UserController(Scanner scanner, DisplayHelper displayHelper) {
+    // VARIABLE
+    private final Scanner scanner;
+
+    // CONSTRUCTOR
+    public UserController(Scanner scanner) {
         this.scanner = scanner;
-        this.displayHelper = displayHelper;
     }
 
+    // METHODS
     public int readInt() {
         try {
-            System.out.print("> ");
+            System.out.print("(>) ");
             int choice = Integer.parseInt(scanner.nextLine());
-            displayHelper.clearScreen();
+            clearScreen();
             return choice;
         } catch (NumberFormatException e) {
-            displayHelper.clearScreen();
-            return 0;
+            clearScreen();
+            return -1;
         }
     }
 
-    public void pressEnterToContinue() {
+    public double readDouble() {
+        try {
+            System.out.print("(>) ");
+            double value = Double.parseDouble(scanner.nextLine());
+            clearScreen();
+            return value;
+        } catch (NumberFormatException e) {
+            clearScreen();
+            return -1;
+        }
+    }
+
+    public void pressEnter() {
         System.out.print("\nPress [ENTER] to continue... ");
         scanner.nextLine();
+    }
+
+    @Override
+    public void clearScreen() {
+        System.out.println("\033[H\033[2J");
+        System.out.println("\n\n\n\n");
     }
 }

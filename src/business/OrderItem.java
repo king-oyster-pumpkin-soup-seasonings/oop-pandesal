@@ -2,11 +2,12 @@ package business;
 
 import pandesal.Pandesal;
 
-public class CartItem {
+public class OrderItem {
+
     private final Pandesal product;
     private int quantity;
 
-    public CartItem(Pandesal product, int quantity) {
+    public OrderItem(Pandesal product, int quantity) {
         this.product = product;
         this.quantity = quantity;
     }
@@ -23,7 +24,8 @@ public class CartItem {
         this.quantity += quantity;
     }
 
-    public double getTotalCost() {
+    public double getSubtotal() {
         return product.calculateTotalCost(quantity);
     }
+
 }
