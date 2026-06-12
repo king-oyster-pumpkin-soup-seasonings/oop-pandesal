@@ -2,6 +2,7 @@ package ui;
 
 import business.Order;
 import business.OrderItem;
+import business.Orderable;
 import business.Products;
 import pandesal.Pandesal;
 
@@ -67,10 +68,11 @@ public class Display implements ClearScreen {
         }
 
         for (int i = 0; i < order.size(); i++) {
-            OrderItem item = order.getItems().get(i);
+            OrderItem item = order.get(i);
             Pandesal product = item.getProduct();
-            System.out.printf("   [%d] %s Pandesal x %d = ₱%.2f%n",
-                    i + 1,
+            if (choice == 2) System.out.print("   [" + (i + 1) + "] ");
+            else System.out.print("   - ");
+            System.out.printf("%s Pandesal x %d = ₱%.2f%n",
                     product.getFlavor(),
                     item.getQuantity(),
                     item.getSubtotal());
@@ -120,7 +122,11 @@ public class Display implements ClearScreen {
         System.out.println("\n:: Enter quantity: (0 - Cancel)");
         quantity = userController.readInt();
         if (quantity == 0) return;
-        else if (quantity > 0) {
+        else if (quantity < 0) {
+            showInvalidChoice();
+            return;
+        }
+        else { 
             showTitle();
             double totalCost = pandesal.calculateTotalCost(quantity);
             System.out.printf("\n:: Total cost for %d pieces of %s Pandesal:\n   ₱%.2f%n", quantity,
@@ -133,14 +139,14 @@ public class Display implements ClearScreen {
             if (choice == 1) {
                 order.addItem(pandesal, quantity);
                 showTitle();
-                System.out.printf("\n%d pieces of %s pandesal %n", quantity,
+                System.out.printf("\n:: %d piece(s) of %s pandesal %n", quantity,
                         pandesal.getFlavor());
-                System.out.printf("added to order worth ₱%.2f%n", totalCost);
+                System.out.printf("   has added to order worth ₱%.2f%n", totalCost);
                 userController.pressEnter();
-            } else if (choice == 2) return;
+            }
+            else if (choice == 2) return;
             else showInvalidChoice();
         }
-        else showInvalidChoice();
     }
 
     public void optionRemoveItem() {
@@ -177,9 +183,32 @@ public class Display implements ClearScreen {
 
         showTitle();
         showStatus();
+        System.out.println(":: Enter discount (0 for none, e.g. 0.10 for 10%): ");
+        double discount = userController.readDouble();
+
+        if (discount == -1 || discount > 1) {
+            showTitle();
+            System.out.println("\n:: Invalid discount. Must be between 0.0 and 1.0");
+            userController.pressEnter();
+            return;
+        }
+
+        double total = 0;
+        for (int i = 0; i < order.size(); i++) {
+            OrderItem item = order.get(i);
+            if (item.getProduct() instanceof Orderable) {
+                Orderable orderable = (Orderable) item.getProduct();
+                total += orderable.calculateTotalCost(item.getQuantity(), discount);
+            } else {
+                total += item.getSubtotal();
+            }
+        }
+
+        showTitle();
+        showStatus();
+        System.out.printf(":: Total after discount: ₱%.2f%n%n", total);
         System.out.println(":: Enter customer payment: (0 - Cancel)");
         double payment = userController.readDouble();
-        double total = order.getTotal();
 
         if (payment == 0) {
             return;
@@ -198,13 +227,19 @@ public class Display implements ClearScreen {
     }
 
     public void optionClearOrder() {
+        showTitle();
         if (order.isEmpty()) {
-            showTitle();
             System.out.println("\n:: Order is already empty.");
             userController.pressEnter();
             return;
         }
-
+        System.out.println("\n:: Confirm clear order?");
+        System.out.println("   [1] Yes, clear order");
+        System.out.println("   [2] No\n");
+        choice = userController.readInt();
+        if (choice == 2) {
+            return;
+        } 
         order.clear();
         showTitle();
         System.out.println("\n:: Current order cleared.");

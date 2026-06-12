@@ -1,9 +1,7 @@
 package business;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-
 import pandesal.Pandesal;
 
 public class Order {
@@ -19,9 +17,9 @@ public class Order {
 
         if (existingItem == null) {
             items.add(new OrderItem(product, quantity));
-        } else {
-            existingItem.addQuantity(quantity);
         }
+        else existingItem.addQuantity(quantity);
+        
     }
 
     public boolean removeItem(int index) {
@@ -32,29 +30,24 @@ public class Order {
         return false;
     }
 
-    public void clear() {
-        items.clear();
-    }
+    public void clear() { items.clear(); }
 
-    public boolean isEmpty() {
-        return items.isEmpty();
-    }
+    public boolean isEmpty() { return items.isEmpty(); }
 
-    public int size() {
-        return items.size();
-    }
+    public int size() { return items.size(); }
 
-    public List<OrderItem> getItems() {
-        return Collections.unmodifiableList(items);
+    // METHOD: Getters
+    public OrderItem get(int index) {
+        if (index >= 0 && index < items.size()) {
+            return items.get(index);
+        }
+        return null;
     }
-
     public double getTotal() {
         double total = 0;
-
         for (OrderItem item : items) {
             total += item.getSubtotal();
         }
-
         return total;
     }
 
@@ -64,7 +57,6 @@ public class Order {
                 return item;
             }
         }
-
         return null;
     }
 

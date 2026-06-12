@@ -21,8 +21,9 @@ public class SpecialPandesal extends Pandesal implements Orderable {
 
     @Override
     public double calculateTotalCost(int quantity, double discount) {
-        return quantity * getPricePerPiece();
-    }
+        double discountedPrice = getPricePerPiece() * (1.0 - discount);
+        return quantity * Math.max(0, discountedPrice);
+}
 
     public double getFlavorCost() {
         return flavorCost;

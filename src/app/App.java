@@ -19,7 +19,7 @@ public class App {
 
         // UI
         display.start();
-
+        
         scanner.close();
     }
 }

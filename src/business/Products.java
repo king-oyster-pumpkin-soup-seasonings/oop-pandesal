@@ -10,13 +10,14 @@ import pandesal.SpecialPandesal;
 public class Products {
 
     private final List<Pandesal> productList;
+    private final BasePricing basePricing;
 
     // CONSTRUCTOR
     public Products() {
         this.productList = new ArrayList<>();
 
         // BASE PANDESAL PRICING
-        BasePricing basePricing = new BasePricing(2.0);
+        this.basePricing = new BasePricing(2.0);
 
         // PRODUCE PRODUCTS
         RegularPandesal regularPandesal = new RegularPandesal(basePricing.getBasePrice());

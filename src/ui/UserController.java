@@ -30,6 +30,7 @@ public class UserController implements ClearScreen {
             System.out.print("(>) ");
             double value = Double.parseDouble(scanner.nextLine());
             clearScreen();
+            if (value < 0) return -1;
             return value;
         } catch (NumberFormatException e) {
             clearScreen();
